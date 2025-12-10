@@ -141,6 +141,7 @@ function startSadEmojis() {
     fallingEmojis = [];
     isAnimatingEmojis = false;
     
+    // Activar el canvas
     emojiCanvas.classList.add('active');
     
     for (let i = 0; i < 50; i++) {
@@ -160,6 +161,7 @@ function startHappyEmojis() {
     fallingEmojis = [];
     isAnimatingEmojis = false;
     
+    // Activar el canvas
     emojiCanvas.classList.add('active');
     
     for (let i = 0; i < 60; i++) {
@@ -189,10 +191,6 @@ let rotationSpeed = 0;
 let selectedBall = null;
 let arrow = null;
 let selectionMode = null;
-
-// ===== NUEVO: CONTADOR DE GANADORES =====
-let winnerCount = 0;
-const PREDEFINED_WINNERS = [68, 73];
 
 const ballCountInput = document.getElementById('ballCount');
 const initButton = document.getElementById('initButton');
@@ -578,26 +576,11 @@ function initBalls() {
         return;
     }
 
-    // Verificar si es la primera vez que se presiona el botón
-    const isFirstLoad = sessionStorage.getItem('hasInitialized');
-    
-    if (!isFirstLoad) {
-        // Primera vez: marcar como inicializado y recargar la página
-        sessionStorage.setItem('hasInitialized', 'true');
-        sessionStorage.setItem('ballCount', count);
-        location.reload();
-        return;
-    }
-
-    // Si ya se recargó, continuar normalmente
     if (!renderer) {
         initThreeJS();
     }
 
     createBalls(count);
-    
-    // ===== NUEVO: RESETEAR CONTADOR DE GANADORES =====
-    winnerCount = 0;
     
     mixButton.disabled = false;
     grabButton.disabled = true;
@@ -640,45 +623,6 @@ function showSelectionModal() {
     selectionModal.classList.add('show');
 }
 
-// ===== NUEVA FUNCIÓN: SELECCIONAR BOLITA CON LÓGICA ESPECIAL =====
-function selectBall(mode) {
-    let selectedNumber;
-    
-    if (mode === 'winner') {
-        // Para ganador: usar números predefinidos
-        if (winnerCount < PREDEFINED_WINNERS.length) {
-            selectedNumber = PREDEFINED_WINNERS[winnerCount];
-            winnerCount++;
-            
-            // Verificar si el número predefinido existe en las bolitas
-            const ball = balls.find(b => b.number === selectedNumber);
-            if (!ball) {
-                showStatus(`Error: El número ${selectedNumber} no está disponible`, 'error');
-                return null;
-            }
-            return ball;
-        } else {
-            // Si ya se usaron todos los predefinidos, seleccionar aleatorio
-            if (balls.length === 0) return null;
-            return balls[Math.floor(Math.random() * balls.length)];
-        }
-    } else {
-        // Para eliminar: NO usar los números predefinidos que aún no han salido
-        const availableBalls = balls.filter(ball => {
-            // Excluir los números ganadores que aún no han sido seleccionados
-            const remainingWinners = PREDEFINED_WINNERS.slice(winnerCount);
-            return !remainingWinners.includes(ball.number);
-        });
-        
-        if (availableBalls.length === 0) {
-            showStatus('Solo quedan números ganadores. ¡Usa la opción GANADOR! 🏆', 'warning');
-            return null;
-        }
-        
-        return availableBalls[Math.floor(Math.random() * availableBalls.length)];
-    }
-}
-
 async function grabBall(mode) {
     if (isAnimating || balls.length === 0) return;
     
@@ -714,15 +658,7 @@ async function grabBall(mode) {
     
     await sleep(movementDuration);
     
-    // ===== USAR LA NUEVA LÓGICA DE SELECCIÓN =====
-    selectedBall = selectBall(mode);
-    
-    if (!selectedBall) {
-        isAnimating = false;
-        mixButton.disabled = false;
-        grabButton.disabled = false;
-        return;
-    }
+    selectedBall = balls[Math.floor(Math.random() * balls.length)];
     
     showStatus('¡La flecha mágica viene! 🎯', 'info');
     
@@ -759,7 +695,6 @@ async function grabBall(mode) {
     
     winnerAnnouncement.classList.add('show');
     
-    // ===== ELIMINAR LA BOLITA DE LA ESFERA =====
     sphereGroup.remove(selectedBall.mesh);
     balls = balls.filter(b => b.number !== selectedBall.number);
     
@@ -807,6 +742,7 @@ winnerBtn.addEventListener('click', () => grabBall('winner'));
 closeWinner.addEventListener('click', () => {
     winnerAnnouncement.classList.remove('show');
     
+    // Limpiar emojis
     fallingEmojis = [];
     isAnimatingEmojis = false;
     emojiCanvas.classList.remove('active');
@@ -820,24 +756,6 @@ closeWinner.addEventListener('click', () => {
     }
 });
 
-// Al cargar la página, verificar si venimos de una recarga del botón
 window.addEventListener('load', () => {
-    const savedCount = sessionStorage.getItem('ballCount');
-    
-    if (savedCount) {
-        // Si hay un valor guardado, significa que venimos de una recarga
-        ballCountInput.value = savedCount;
-        sessionStorage.removeItem('ballCount');
-        
-        // Inicializar automáticamente después de la recarga
-        if (!renderer) {
-            initThreeJS();
-        }
-        createBalls(parseInt(savedCount));
-        mixButton.disabled = false;
-        grabButton.disabled = true;
-        showStatus(`${savedCount} bolitas inicializadas correctamente 🎄`, 'success');
-    } else {
-        showStatus('¡Bienvenido al sorteo navideño! ❄️ Ingresa la cantidad de bolitas', 'info');
-    }
+    showStatus('¡Bienvenido al sorteo navideño! ❄️ Ingresa la cantidad de bolitas', 'info');
 });
