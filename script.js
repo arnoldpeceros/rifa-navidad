@@ -841,4 +841,3 @@ window.addEventListener('load', () => {
         showStatus('¡Bienvenido al sorteo navideño! ❄️ Ingresa la cantidad de bolitas', 'info');
     }
 });
-
