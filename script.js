@@ -192,7 +192,7 @@ let selectionMode = null;
 
 // ===== NUEVO: CONTADOR DE GANADORES =====
 let winnerCount = 0;
-const PREDEFINED_WINNERS = [124, 68, 73];
+const PREDEFINED_WINNERS = [68, 73];
 
 const ballCountInput = document.getElementById('ballCount');
 const initButton = document.getElementById('initButton');
